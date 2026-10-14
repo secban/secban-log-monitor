@@ -1,0 +1,6 @@
+# Matcher for nginx access log kiddie scans.
+nginx-kiddies:
+  match_regexes:
+    - '(?i:\.php|admin|\.\.|cgi-bin|auth|webmail|\\x01\\|\.cgi|\.asp|\.aspx|\.jsp|\.pl|\.py|\.rb|\.sh|\.exe|\.env|\.ini|\.sql|\.log|\.key|wp-login|xmlrpc|\.bak|\.old|\.backup|\.swp|\.tmp|\.bash|dump|\.git|\.svn|\.htaccess)'
+  rule: "standard"
+  watcher: "nginx-combined"

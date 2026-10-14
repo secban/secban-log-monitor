@@ -1,0 +1,26 @@
+[Unit]
+Description=SecBan Monitor Service
+After=network.target secban-agent.service
+ConditionPathExists=/usr/sbin/secban-log-monitor
+
+[Service]
+User=secban-log-monitor
+Group=secban
+SupplementaryGroups=adm systemd-journal
+Type=exec
+ExecStart=/usr/sbin/secban-log-monitor
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadOnlyPaths=/var/log
+CapabilityBoundingSet=CAP_DAC_READ_SEARCH
+AmbientCapabilities=CAP_DAC_READ_SEARCH
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+[Install]
+WantedBy=multi-user.target
+Alias=secban-log-monitor.service

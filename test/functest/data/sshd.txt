@@ -1,0 +1,114 @@
+# Adapted from SSHGuard at https://raw.githubusercontent.com/riptideio/sshguard/refs/heads/master/src/parser/tests.txt
+Invalid user inexu from 6.6.6.0
+Invalid user inexu from 2001:db8::a11:beef:7ac0
+100 2001:db8::a11:beef:7ac0 6 10
+Invalid user inexu from 2001:db8::a11:beef:7ac0%abcdefgh1234567
+100 2001:db8::a11:beef:7ac0 6 10
+User mario from 6.6.6.0 not allowed because XYZ
+
+ROOT LOGIN REFUSED FROM 6.6.6.0 port 14423
+ROOT LOGIN REFUSED FROM 2001:db8::a11:beef:7ac1 port 14423
+100 2001:db8::a11:beef:7ac1 6 10
+ROOT LOGIN REFUSED FROM 1.2.3.4 port 14423 [preauth]
+100 1.2.3.4 4 10
+ROOT LOGIN REFUSED FROM 2001:db8::a11:beef:7ac1 port 14423 [preauth]
+100 2001:db8::a11:beef:7ac1 6 10
+User mario from 2001:db8::a11:beef:7ac0 not allowed because XYZ
+100 2001:db8::a11:beef:7ac0 6 10
+User mario from 2001:db8::a11:beef:7ac0%lo not allowed because XYZ
+100 2001:db8::a11:beef:7ac0 6 10
+Failed XYZ for XYZ from 6.6.6.0 port 14423 ssh2
+
+Failed XYZ for XYZ from 2001:db8::a11:beef:7ac0 port 14423 ssh2
+100 2001:db8::a11:beef:7ac0 6 10
+Failed XYZ for XYZ from 2001:db8::a11:beef:7ac1 port 14423 ssh2: ED25519 SHA256:0123456789ABCDEF+/0123456789ABCDEF+/0123456
+100 2001:db8::a11:beef:7ac1 6 10
+Failed XYZ for XYZ from 1.2.3.4 port 14423 ssh2: ECDSA sha256:0123456789abcdef+/0123456789abcdef+/0123456
+100 1.2.3.4 4 10
+Failed XYZ for XYZ from 2001:db8::a11:beef:7ac1 port 14423 ssh2: rsa MD5:01:23:45:67:89:AB:CD:EF:01:23:45:67:89:AB:CD:EF
+100 2001:db8::a11:beef:7ac1 6 10
+Failed XYZ for XYZ from 1.2.3.4 port 14423 ssh2: dsa md5:01:23:45:67:89:ab:cd:ef:01:23:45:67:89:ab:cd:ef
+100 1.2.3.4 4 10
+Failed XYZ for XYZ from 2001:db8::a11:beef:7ac0%enp3s0 port 14423 ssh2
+100 2001:db8::a11:beef:7ac0 6 10
+fatal: Unable to negotiate with 6.6.6.6 port 2222: no matching key exchange method found. Their offer: diffie-hellman-group14-sha1
+100 6.6.6.6 4 10
+error: PAM: authentication failure for mario from 6.6.6.0
+
+error: PAM: authentication failure for mario from 2001:db8::a11:beef:7ac0
+100 2001:db8::a11:beef:7ac0 6 10
+error: PAM: authentication failure for mario from 2001:db8::a11:beef:7ac0%vbr1
+100 2001:db8::a11:beef:7ac0 6 10
+error: PAM: unknown user for illegal user mario from 6.6.6.6
+100 6.6.6.6 4 10
+Did not receive identification string from 6.6.6.0
+
+Did not receive identification string from 2001:db8::a11:beef:7ac0
+100 2001:db8::a11:beef:7ac0 6 10
+Did not receive identification string from 2001:db8::a11:beef:7ac0%eth0
+100 2001:db8::a11:beef:7ac0 6 10
+Bad protocol version identification XYZ from 6.6.6.0
+
+Bad protocol version identification XYZ from 2001:db8::a11:beef:7ac0
+100 2001:db8::a11:beef:7ac0 6 10
+Apr 10 02:43:29 quasar sshd[50112]: Connection closed by 66.240.236.119 [preauth]
+100 66.240.236.119 4 2
+Apr 10 02:43:29 quasar sshd[50112]: Connection closed by 2001:db8::a11:beef:7ac0 [preauth]
+100 2001:db8::a11:beef:7ac0 6 2
+Jun 19 09:08:14 isori sshd[93628]: Connection closed by authenticating user root 192.168.7.7 port 42728 [preauth]
+100 192.168.7.7 4 2
+Connection reset by invalid user username 1.2.3.4 port 55895 [preauth]
+100 1.2.3.4 4 2
+Connection closed by invalid user gpadmin 1.2.3.4 port 9224 [preauth]
+100 1.2.3.4 4 2
+Apr 10 13:50:24 quasar sshd[53269]: error: Received disconnect from 95.9.156.208: 3: com.jcraft.jsch.JSchException: Auth fail [preauth]
+100 95.9.156.208 4 10
+Apr 10 13:50:24 quasar sshd[53269]: error: Received disconnect from 2001:db8::a11:beef:7ac0: 3: com.jcraft.jsch.JSchException: Auth fail [preauth]
+100 2001:db8::a11:beef:7ac0 6 10
+Apr 10 06:55:42 quasar sshd[50880]: Received disconnect from 130.207.203.56: 11: These aren't the droids we're looking for. [preauth]
+100 130.207.203.56 4 10
+Apr 10 06:55:42 quasar sshd[50880]: Received disconnect from 2001:db8::a11:beef:7ac0: 11: These aren't the droids we're looking for. [preauth]
+100 2001:db8::a11:beef:7ac0 6 10
+Apr  9 13:24:07 quasar sshd[44787]: Received disconnect from 103.237.33.58: 11: Bye Bye [preauth]
+100 103.237.33.58 4 10
+Apr  9 13:24:07 quasar sshd[44787]: Received disconnect from 2001:db8::a11:beef:7ac0: 11: Bye Bye [preauth]
+100 2001:db8::a11:beef:7ac0 6 10
+2015-05-27T04:31:27.46667 auth.info: Invalid user admin from 192.168.2.1
+100 192.168.2.1 4 10
+2015-05-27T04:31:27.46667 auth.info: Invalid user admin from 2001:db8::a11:beef:7ac0
+100 2001:db8::a11:beef:7ac0 6 10
+Jun 20 02:18:39 vps auth.info sshd[13482]: Invalid user admin from 192.168.2.2
+100 192.168.2.2 4 10
+Jun 20 02:18:39 vps auth.info sshd[13482]: Invalid user admin from 2001:db8::a11:beef:7ac0
+100 2001:db8::a11:beef:7ac0 6 10
+May 29 14:44:30 epsilon sshd[4564]: error: Received disconnect from 192.168.2.200: 14: No supported authentication methods available [preauth]
+100 192.168.2.200 4 10
+May 29 14:44:30 epsilon sshd[4564]: error: Received disconnect from 2001:db8::a11:beef:7ac0: 14: No supported authentication methods available [preauth]
+100 2001:db8::a11:beef:7ac0 6 10
+error: maximum authentication attempts exceeded for root from 117.81.26.226 port 4919 ssh2 [preauth]
+100 117.81.26.226 4 10
+error: maximum authentication attempts exceeded for root from 2001:db8::a11:beef:7ac0 port 4919 ssh2 [preauth]
+100 2001:db8::a11:beef:7ac0 6 10
+Invalid user support from 190.50.238.98 port 32836
+100 190.50.238.98 4 10
+Invalid user support from 2001:db8::a11:beef:7ac0 port 32836
+100 2001:db8::a11:beef:7ac0 6 10
+Failed password for invalid user admin from 172.22.10.15 port 39065 ssh2
+100 172.22.10.15 4 10
+Failed password for invalid user admin from 2001:db8::a11:beef:7ac1 port 39065 ssh2
+100 2001:db8::a11:beef:7ac1 6 10
+Jul  4 13:55:09 karpov sshd[64301]: Disconnecting invalid user user 10.42.42.42 port 38987: Change of username or service not allowed: (user,ssh-connection) -> (manager,ssh-connection) [preauth]
+Disconnected from authenticating user root 1.2.3.4 port 57142 [preauth]
+Disconnected from invalid user support 1.2.3.4 port 56636 [preauth]
+100 1.2.3.4 4 10
+Disconnected from 1.2.3.4 port 30761 [preauth]
+100 1.2.3.4 4 10
+<35>1 2020-01-03T11:57:14.257387-05:00 1.2.3.4 sshd 86784 - - error: PAM: Authentication error for root from 1.2.3.4
+100 1.2.3.4 4 10
+Dec  1 06:25:27 server sshd[19956]: Accepted publickey for User from 1.2.3.4 port 21563 ssh2: RSA SHA256:...
+Dec  1 06:25:27 server sshd[19471]: Received disconnect from 1.2.3.4 port 60058:11: disconnected by user
+Dec  1 06:25:27 server sshd[19471]: Disconnected from 1.2.3.4 port 60058
+Connection closed by ::1 port 44678 [preauth]
+error: kex_exchange_identification: read: Connection reset by peer
+Connection reset by 45.79.115.59 port 37016
+banner exchange: Connection from 172.236.228.224 port 26836: invalid format

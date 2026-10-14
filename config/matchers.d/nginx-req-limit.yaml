@@ -1,0 +1,6 @@
+# Matcher for nginx request limit log.
+nginx-req-limit:
+  match_regexes:
+    - "limiting requests, excess"
+  rule: "standard"
+  watcher: "nginx-req-limit"

@@ -1,0 +1,9 @@
+# Matcher for sshd authentication failures and suspicious disconnects.
+sshd:
+  ignore_regexes:
+    - "closed by ::1 port"
+  match_regexes:
+    - "(?i) failure|invalid user|not allowed|login refused|authentication error|attempts exceeded|no supported authentication|auth fail|bad protocol|did not receive|unable to negotiate|illegal user|unknown user|invalid format"
+    - '(?i:closed|disconnect|error|failed|reset).*\[preauth\]'
+  rule: "standard"
+  watcher: "sshd-journalctl"

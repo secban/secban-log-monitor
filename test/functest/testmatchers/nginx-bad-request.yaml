@@ -1,0 +1,8 @@
+data: nginx.access.log
+expects:
+  ignored: 283
+  lines: 315
+  matches: 32
+match_regexes:
+  - '" (?:400|401|403|444) ' # Bad request, Unauthorized, Forbidden, No Response
+name: "nginx-bad-request"

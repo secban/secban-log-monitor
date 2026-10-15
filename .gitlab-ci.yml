@@ -1,5 +1,9 @@
 stages:
   - lint
+  - test
+  - build
+  - prepare_release
+  - release
 include:
   - component: $CI_SERVER_FQDN/components/code-quality-oss/codequality-os-scanners-integration/shellcheck@1.6.1
   - component: $CI_SERVER_FQDN/components/code-quality-oss/codequality-os-scanners-integration/golangci@1.6.1
@@ -7,13 +11,96 @@ include:
   - template: Security/Secret-Detection.gitlab-ci.yml
 variables:
   SECRET_DETECTION_ENABLED: "true"
+  PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/secban-log-monitor/${CI_COMMIT_TAG}"
+.go-cache:
+  image: golangci/golangci-lint:v2.13.2
+  variables:
+    GOPATH: $CI_PROJECT_DIR/.go
+  before_script:
+    - mkdir -p .go
+  cache:
+    paths:
+      - .go
 shellcheck-generate:
   stage: lint
+  allow_failure: false
 shellcheck-format:
   stage: lint
+  allow_failure: false
 golangci-lint:
   stage: lint
+  allow_failure: false
+  extends:
+    - .go-cache
 sast:
   stage: lint
 secret_detection:
   stage: lint
+go-test:
+  extends:
+    - .go-cache
+  stage: test
+  script:
+    - go test -race ./...
+  allow_failure: false
+.build_matrix: &build_matrix
+  parallel:
+    matrix:
+      - OS: ["linux"]
+        ARCH: ["amd64", "arm64"]
+build:
+  stage: build
+  extends:
+    - .go-cache
+  script:
+    - /bin/bash ./_scripts/build.sh "$OS" "$ARCH" 0.0.0
+  allow_failure: false
+  rules:
+    - if: $CI_COMMIT_TAG == ""
+  <<: *build_matrix
+prepare_release:
+  extends:
+    - .go-cache
+  stage: prepare_release
+  script:
+    # Build using the matrix variables
+    - /bin/bash ./_scripts/build.sh "$OS" "$ARCH" "${CI_COMMIT_TAG}"
+
+    # Upload assets to the generic registry and build the dynamic link entry
+    - mkdir -p release_assets
+    - |
+      for file in ./build/*; do
+        if [ -f "$file" ]; then
+          filename=$(basename "$file")
+
+          curl --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+              --upload-file "$file" \
+              "$PACKAGE_REGISTRY_URL/$filename"
+              
+          echo "{\"name\":\"${filename}\",\"url\":\"${PACKAGE_REGISTRY_URL}/${filename}\"}" > "release_assets/${OS}_${ARCH}.json"
+        fi
+      done
+  rules:
+    - if: $CI_COMMIT_TAG
+  artifacts:
+    paths:
+      - release_assets/
+    expire_in: 1 hour
+  <<: *build_matrix
+
+release:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  needs:
+    - job: prepare_release
+  rules:
+    - if: $CI_COMMIT_TAG
+  script:
+    - ASSET_LINKS=""
+    - |
+      for file in release_assets/*.json; do
+        if [ -f "$file" ]; then
+          ASSET_LINKS="$ASSET_LINKS --assets-link=$(cat "$file")"
+        fi
+      done
+    - release-cli create --name "secban-log-monitor-$CI_COMMIT_TAG" --tag-name "$CI_COMMIT_TAG" --description "SecBan Log Monitor release $CI_COMMIT_TAG" $ASSET_LINKS

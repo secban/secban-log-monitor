@@ -47,6 +47,11 @@ if [ ! -f /etc/secban/monitor.yaml ]; then
 fi
 
 # Install systemd service.
-cp "./secban-log-monitor.service" "/etc/systemd/system/secban-log-monitor.service"
-systemctl daemon-reload
-systemctl enable secban-log-monitor.service
+if [ ! -f /etc/systemd/system/secban-log-monitor.service ]; then
+    cp "./secban-log-monitor.service" "/etc/systemd/system/secban-log-monitor.service"
+fi
+
+if [ ! -z "$(which systemctl)" ]; then
+    systemctl daemon-reload
+    systemctl enable secban-log-monitor.service
+fi

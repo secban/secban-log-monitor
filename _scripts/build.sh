@@ -1,0 +1,45 @@
+#!/bin/bash
+# shellcheck disable=SC2086 # We want $BUILD_OPTIONS to be expanded as-is.
+set -ex
+
+REPO=$(git rev-parse --show-toplevel)
+
+
+rm -rf build
+mkdir -p build
+
+BUILD_OPTIONS="-buildvcs=false -trimpath"
+LDFLAGS="-ldflags=-w -s"
+
+export GOOS="$1"
+export ARCH="$2"
+export VERSION="$3"
+
+if [ -z "$GOOS" ] || [ -z "$ARCH" ] || [ -z "$VERSION" ]; then
+    echo "Usage: $0 <GOOS> <ARCH> <VERSION>"
+    exit 1
+fi
+
+TEST_INSTALL=false
+if [ "$4" = "install" ]; then
+    TEST_INSTALL=true
+fi
+
+TMPDIR=$(mktemp -d)
+
+export GOARCH="$ARCH"; env GOOS="$GOOS" GOARCH="$ARCH" go build $BUILD_OPTIONS -o "$TMPDIR/$ARCH/secban-log-monitor" "$LDFLAGS" "$REPO/cmd/monitor/monitor.go"
+export GOARCH="$ARCH"; env GOOS="$GOOS" GOARCH="$ARCH" go build $BUILD_OPTIONS -o "$TMPDIR/$ARCH/secban-log-checkmatch" "$LDFLAGS" "$REPO/cmd/checkmatch/checkmatch.go"
+
+cp "$REPO/_scripts/install.sh" "$TMPDIR/$ARCH/"
+cp "$REPO/config/monitor.yaml" "$TMPDIR/$ARCH/"
+cp -r "$REPO/config/watchers.d" "$TMPDIR/$ARCH/"
+cp -r "$REPO/config/matchers.d" "$TMPDIR/$ARCH/"
+cp "$REPO/_scripts/systemd/secban-log-monitor.service" "$TMPDIR/$ARCH/"
+
+chmod +x "$TMPDIR/$ARCH/install.sh"
+
+if [ "$TEST_INSTALL" = true ]; then
+    (cd "$TMPDIR/$ARCH" && ./install.sh)
+fi
+
+(cd "$TMPDIR/$ARCH" && tar -czvf "$REPO/build/secban-log-monitor-$GOOS-$ARCH-$VERSION.tar.gz" ./*)

@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"gitlab.com/thequietbot/secban/secban-log-monitor/config"
-	"gitlab.com/thequietbot/secban/secban-log-monitor/matcher"
+	"gitlab.com/secban/secban-log-monitor/config"
+	"gitlab.com/secban/secban-log-monitor/matcher"
 )
 
 const retryInterval = 1 * time.Second

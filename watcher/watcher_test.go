@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"gitlab.com/thequietbot/secban/secban-log-monitor/config"
-	"gitlab.com/thequietbot/secban/secban-log-monitor/matcher"
-	"gitlab.com/thequietbot/secban/secban-log-monitor/watcher"
+	"gitlab.com/secban/secban-log-monitor/config"
+	"gitlab.com/secban/secban-log-monitor/matcher"
+	"gitlab.com/secban/secban-log-monitor/watcher"
 )
 
 func TestWatcherNew(t *testing.T) {

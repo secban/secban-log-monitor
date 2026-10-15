@@ -1,4 +1,4 @@
-module gitlab.com/thequietbot/secban/secban-log-monitor
+module gitlab.com/secban/secban-log-monitor
 
 go 1.27.0
 

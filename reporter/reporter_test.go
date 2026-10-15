@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"gitlab.com/thequietbot/secban/secban-log-monitor/reporter"
+	"gitlab.com/secban/secban-log-monitor/reporter"
 )
 
 func TestReporterSuccess(t *testing.T) {

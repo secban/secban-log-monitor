@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"gitlab.com/thequietbot/secban/secban-log-monitor/config"
+	"gitlab.com/secban/secban-log-monitor/config"
 )
 
 func TestParseConfigValid(t *testing.T) {

@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"gitlab.com/thequietbot/secban/secban-log-monitor/config"
-	"gitlab.com/thequietbot/secban/secban-log-monitor/monitor"
-	"gitlab.com/thequietbot/secban/secban-log-monitor/reporter"
-	"gitlab.com/thequietbot/secban/secban-log-monitor/watcher"
+	"gitlab.com/secban/secban-log-monitor/config"
+	"gitlab.com/secban/secban-log-monitor/monitor"
+	"gitlab.com/secban/secban-log-monitor/reporter"
+	"gitlab.com/secban/secban-log-monitor/watcher"
 )
 
 type mockReporter struct {

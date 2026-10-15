@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"gitlab.com/thequietbot/secban/secban-log-monitor/config"
-	"gitlab.com/thequietbot/secban/secban-log-monitor/matcher"
-	"gitlab.com/thequietbot/secban/secban-log-monitor/reporter"
-	"gitlab.com/thequietbot/secban/secban-log-monitor/watcher"
+	"gitlab.com/secban/secban-log-monitor/config"
+	"gitlab.com/secban/secban-log-monitor/matcher"
+	"gitlab.com/secban/secban-log-monitor/reporter"
+	"gitlab.com/secban/secban-log-monitor/watcher"
 )
 
 const defaultTimeout = 1 * time.Second

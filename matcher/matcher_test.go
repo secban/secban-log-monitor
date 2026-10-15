@@ -3,7 +3,7 @@ package matcher_test
 import (
 	"testing"
 
-	"gitlab.com/thequietbot/secban/secban-log-monitor/matcher"
+	"gitlab.com/secban/secban-log-monitor/matcher"
 )
 
 func TestMatcherNewValid(t *testing.T) {

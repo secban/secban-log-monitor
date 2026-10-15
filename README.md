@@ -1,6 +1,6 @@
 # SecBan Log Monitor
 
-SecBan Log Monitor is a log surveillance daemon for the SecBan framework. It watches log streams via external commands (`tail`, `journalctl`), extracts client IP addresses, evaluates lines against pattern matchers, and reports offending IPs to the SecBan agent via HTTP or UNIX domain socket.
+SecBan Log Monitor is a log surveillance daemon for the [SecBan framework](https://gitlab.com/secban). It watches log streams via external commands (`tail`, `journalctl`), extracts client IP addresses, evaluates lines against pattern matchers, and reports offending IPs to the SecBan agent via HTTP or UNIX domain socket.
 
 ## Features
 
@@ -14,7 +14,7 @@ SecBan Log Monitor is a log surveillance daemon for the SecBan framework. It wat
 
 ## Installation
 
-Pre-compiled release packages are published in the GitLab package registry.
+Pre-compiled release packages are published in the GitLab package registry: https://gitlab.com/secban/secban-log-monitor/-/releases/permalink/latest
 
 ### Download and Extract
 

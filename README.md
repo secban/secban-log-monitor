@@ -1,93 +1,187 @@
-# Secban Log Monitor
+# SecBan Log Monitor
 
+SecBan Log Monitor is a log surveillance daemon for the SecBan framework. It watches log streams via external commands (`tail`, `journalctl`), extracts client IP addresses, evaluates lines against pattern matchers, and reports offending IPs to the SecBan agent via HTTP or UNIX domain socket.
 
+## Features
 
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://gitlab.com/secban/secban-log-monitor.git
-git branch -M main
-git push -uf origin main
-```
-
-## Integrate with your tools
-
-* [Set up project integrations](https://gitlab.com/secban/secban-log-monitor/-/settings/integrations)
-
-## Collaborate with your team
-
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+- Log stream monitoring using standard tools (`journalctl`, `tail -F`)
+- Separation between log source watchers and detection matchers
+- Regex extraction of IPv4 and IPv6 addresses
+- Match and ignore regex filters per matcher
+- Direct reporting to SecBan agent over UNIX socket or HTTP
+- Command-line testing tool (`secban-checkmatch`) to validate rules against recent logs
+- Systemd service integration
 
 ## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+Pre-compiled release packages are published in the GitLab package registry.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+### Download and Extract
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+```sh
+# Set target version, OS, and architecture
+VERSION="v0.1.0" # replace with desired version
+OS="linux"
+ARCH="amd64" # or arm64
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+# Download archive from GitLab Generic Package Registry
+curl -sSL -o "secban-log-monitor.tar.gz" \
+  "https://gitlab.com/api/v4/projects/secban%2Fsecban-log-monitor/packages/generic/secban-log-monitor/${VERSION}/secban-log-monitor-${OS}-${ARCH}-${VERSION}.tar.gz"
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+# Extract archive
+tar -xzf "secban-log-monitor.tar.gz" -C /tmp/secban-install
+cd /tmp/secban-install
+```
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+### Install
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+Run the included install script as `root`:
 
-## License
-For open source projects, say how it is licensed.
+```sh
+sudo ./install.sh
+```
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+The script performs the following steps:
+1. Creates `secban` system group and `secban-log-monitor` system user.
+2. Adds `secban-log-monitor` to log-reading groups (`adm`, `log`, `systemd-journal`).
+3. Installs daemon `/usr/sbin/secban-log-monitor`.
+4. Installs test utility `/usr/bin/secban-checkmatch`.
+5. Copies initial configuration files to `/etc/secban/` (if not already present).
+6. Installs and enables systemd service `secban-log-monitor.service`.
+
+### Start Service
+
+```sh
+sudo systemctl start secban-log-monitor.service
+sudo systemctl status secban-log-monitor.service
+```
+
+## Configuration
+
+Configuration resides in `/etc/secban/`.
+
+```
+/etc/secban/
+├── monitor.yaml       # Main daemon configuration
+├── watchers.d/        # Log stream definitions (*.yaml)
+└── matchers.d/        # Detection patterns and rule mappings (*.yaml)
+```
+
+### Main Configuration (`monitor.yaml`)
+
+```yaml
+# Agent endpoint to report offenders
+agent_url: "unix:///var/run/secban/agent.sock"
+
+# Logging level: trace, debug, info, warn, error
+log_level: "info"
+```
+
+### Watchers (`watchers.d/*.yaml`)
+
+Watchers execute commands that stream log output. They define how to read lines and how to extract the client IP.
+
+| Field | Type | Description |
+|---|---|---|
+| `command` | string | Command binary to execute (e.g. `journalctl`, `tail`). |
+| `args` | list of strings | Arguments used during daemon operation (streaming mode). |
+| `test_args` | list of strings | Arguments used by `secban-checkmatch` (non-streaming, bounded output). |
+| `ip_regex` | string | Regular expression containing named capture group `(?P<ip>...)` to extract target IP. |
+| `env` | list of strings | Optional environment variables passed to command (e.g. `LANG=C`). |
+
+### Matchers (`matchers.d/*.yaml`)
+
+Matchers evaluate lines produced by a watcher against detection rules.
+
+| Field | Type | Description |
+|---|---|---|
+| `watcher` | string | Name of associated watcher. |
+| `rule` | string | Rule name sent to SecBan agent (must match rule configured in agent). |
+| `match_regexes` | list of strings | Regex patterns that trigger a report when matched. |
+| `ignore_regexes` | list of strings | Optional regex patterns to ignore even if `match_regexes` matched. |
+
+## Examples
+
+### 1. SSH Monitoring via `journalctl`
+
+**Watcher** (`/etc/secban/watchers.d/sshd-journalctl.yaml`):
+
+```yaml
+sshd-journalctl:
+  command: "journalctl"
+  args:
+    - "-afb"
+    - "-p"
+    - "info"
+    - "-n0"
+    - "-o"
+    - "cat"
+    - "SYSLOG_FACILITY=4"
+    - "SYSLOG_FACILITY=10"
+  test_args:
+    - "-b"
+    - "-p"
+    - "info"
+    - "-n500"
+    - "-o"
+    - "cat"
+    - "SYSLOG_FACILITY=4"
+    - "SYSLOG_FACILITY=10"
+  env:
+    - "LANG=C"
+  ip_regex: '(?i:from|with|by|user\s+\S+)\s+(?P<ip>(?:[0-9a-fA-F]{1,4}:[0-9a-fA-F:]*[0-9a-fA-F]|::[0-9a-fA-F:]*|\d{1,3}(?:\.\d{1,3}){3}))(?:%\S+)?(?::\s|\s|$)'
+```
+
+**Matcher** (`/etc/secban/matchers.d/sshd.yaml`):
+
+```yaml
+sshd:
+  watcher: "sshd-journalctl"
+  rule: "standard"
+  match_regexes:
+    - "(?i) failure|invalid user|not allowed|login refused|authentication error|attempts exceeded|no supported authentication|auth fail|bad protocol|did not receive|unable to negotiate|illegal user|unknown user|invalid format"
+    - '(?i:closed|disconnect|error|failed|reset).*\[preauth\]'
+  ignore_regexes:
+    - "closed by ::1 port"
+```
+
+### 2. NGINX Access Log Monitoring via `tail`
+
+**Watcher** (`/etc/secban/watchers.d/nginx-combined.yaml`):
+
+```yaml
+nginx-combined:
+  command: "tail"
+  args:
+    - "--follow=name"
+    - "--retry"
+    - "--quiet"
+    - "-n0"
+    - "/var/log/nginx/access.log"
+  test_args:
+    - "-n"
+    - "500"
+    - "/var/log/nginx/access.log"
+  ip_regex: '^(?P<ip>\S+) - -'
+```
+
+**Matcher** (`/etc/secban/matchers.d/nginx-not-found.yaml`):
+
+```yaml
+nginx-not-found:
+  watcher: "nginx-combined"
+  rule: "not_found"
+  match_regexes:
+    - '" (?:404) '
+  ignore_regexes:
+    - 'GET /favicon\.ico HTTP'
+```
+
+### 3. Testing Patterns with `secban-checkmatch`
+
+Run `secban-checkmatch` to test watchers and matchers against recent logs without sending reports:
+
+```sh
+secban-checkmatch -config /etc/secban sshd-journalctl
+```
+

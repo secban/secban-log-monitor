@@ -33,8 +33,8 @@ cp "./secban-log-monitor" "/usr/sbin/"
 chmod 0755 "/usr/sbin/secban-log-monitor"
 
 # Install the secban-checkmatch helper binary.
-cp "./secban-checkmatch" "/usr/bin/"
-chmod 0755 "/usr/bin/secban-checkmatch"
+cp "./secban-log-checkmatch" "/usr/bin/"
+chmod 0755 "/usr/bin/secban-log-checkmatch"
 
 # Install configuration.
 mkdir -p /etc/secban

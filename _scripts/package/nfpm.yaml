@@ -49,11 +49,6 @@ contents:
     expand: true
     file_info:
       mode: 0644
-  - src: "${REPO_DIR}/_scripts/openrc/secban-log-monitor.rc"
-    dst: "/etc/init.d/secban-log-monitor"
-    expand: true
-    file_info:
-      mode: 0755
   - dst: "/var/run/secban"
     type: dir
     file_info:

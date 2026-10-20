@@ -42,8 +42,8 @@ sudo ./install.sh
 ```
 
 The script performs the following steps:
-1. Creates `secban` system group and `secban-log-monitor` system user.
-2. Adds `secban-log-monitor` to log-reading groups (`adm`, `log`, `systemd-journal`).
+1. Creates `secban` system group and `secban` system user.
+2. Adds `secban` to log-reading groups (`adm`, `log`, `systemd-journal`).
 3. Installs daemon `/usr/sbin/secban-log-monitor`.
 4. Installs test utility `/usr/bin/secban-checkmatch`.
 5. Copies initial configuration files to `/etc/secban/` (if not already present).

@@ -4,7 +4,7 @@ After=network.target secban-agent.service
 ConditionPathExists=/usr/sbin/secban-log-monitor
 
 [Service]
-User=secban-log-monitor
+User=secban
 Group=secban
 SupplementaryGroups=adm systemd-journal
 Type=exec

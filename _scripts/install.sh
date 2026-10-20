@@ -16,15 +16,15 @@ if ! getent group secban >/dev/null 2>&1; then
     groupadd --system secban
 fi
 
-# Create user for secban-log-monitor in the secban group.
-if ! id -u secban-log-monitor >/dev/null 2>&1; then
-    useradd --no-create-home --system --shell /sbin/nologin --gid secban secban-log-monitor
+# Create user for secban in the secban group.
+if ! id -u secban >/dev/null 2>&1; then
+    useradd --no-create-home --system --shell /sbin/nologin --gid secban secban
 fi
 
-# Add secban-log-monitor to log-reading groups if they exist.
+# Add secban to log-reading groups if they exist.
 for grp in adm log systemd-journal; do
     if getent group "$grp" >/dev/null 2>&1; then
-        usermod -a -G "$grp" secban-log-monitor || true
+        usermod -a -G "$grp" secban || true
     fi
 done
 

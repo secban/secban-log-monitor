@@ -27,14 +27,16 @@ fi
 
 TMPDIR=$(mktemp -d)
 
-export GOARCH="$ARCH"; env GOOS="$GOOS" GOARCH="$ARCH" go build $BUILD_OPTIONS -o "$TMPDIR/$ARCH/secban-log-monitor" "$LDFLAGS" "$REPO/cmd/monitor/monitor.go"
-export GOARCH="$ARCH"; env GOOS="$GOOS" GOARCH="$ARCH" go build $BUILD_OPTIONS -o "$TMPDIR/$ARCH/secban-log-checkmatch" "$LDFLAGS" "$REPO/cmd/checkmatch/checkmatch.go"
+export GOARCH="$ARCH"; env CGO_ENABLED=0 GOOS="$GOOS" GOARCH="$ARCH" go build $BUILD_OPTIONS -o "$TMPDIR/$ARCH/secban-log-monitor" "$LDFLAGS" "$REPO/cmd/monitor/monitor.go"
+export GOARCH="$ARCH"; env CGO_ENABLED=0 GOOS="$GOOS" GOARCH="$ARCH" go build $BUILD_OPTIONS -o "$TMPDIR/$ARCH/secban-log-checkmatch" "$LDFLAGS" "$REPO/cmd/checkmatch/checkmatch.go"
 
 cp "$REPO/_scripts/install.sh" "$TMPDIR/$ARCH/"
 cp "$REPO/config/monitor.yaml" "$TMPDIR/$ARCH/"
 cp -r "$REPO/config/watchers.d" "$TMPDIR/$ARCH/"
 cp -r "$REPO/config/matchers.d" "$TMPDIR/$ARCH/"
 cp "$REPO/_scripts/systemd/secban-log-monitor.service" "$TMPDIR/$ARCH/"
+cp "$REPO/_scripts/openrc/secban-log-monitor.rc" "$TMPDIR/$ARCH/"
+
 
 chmod +x "$TMPDIR/$ARCH/install.sh"
 

@@ -1,0 +1,36 @@
+#!/sbin/openrc-run
+
+description="SecBan Log Monitor Service"
+supervisor="supervise-daemon"
+
+command="/usr/sbin/secban-log-monitor"
+command_user="secban-log-monitor:secban"
+
+respawn_delay=5
+respawn_max=0 # 0 means unlimited retry attempts
+
+depend() {
+    need net
+}
+
+start_pre() {
+    # Systemd: ConditionPathExists=/usr/sbin/secban-log-monitor
+    if [ ! -x "/usr/sbin/secban-log-monitor" ]; then
+        eerror "Executable /usr/sbin/secban-log-monitor does not exist or is not executable"
+        return 1
+    fi
+
+    # Systemd: ReadWritePaths=/var/run/secban /var/lib/secban
+    # OpenRC requires explicitly setting up directories if they don't exist
+    checkpath -d -m 0755 -o secban-log-monitor:secban /var/run/secban
+    checkpath -d -m 0755 -o secban-log-monitor:secban /var/lib/secban
+    mkdir -p /var/log/secban
+    chown secban-agent:secban /var/log/secban
+    chmod 0755 /var/log/secban
+    checkpath -f -m 0640 -o secban-log-monitor:secban /var/log/secban/log-monitor.log
+    checkpath -f -m 0640 -o secban-log-monitor:secban /var/log/secban/log-monitor.err
+}
+
+# Systemd: CapabilityBoundingSet & AmbientCapabilities
+# Requires the 'libcap' utility inside Alpine to inherit capabilities natively.
+capabilities="^cap_dac_read_search"

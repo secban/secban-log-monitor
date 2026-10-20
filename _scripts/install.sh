@@ -18,7 +18,7 @@ fi
 
 # Create user for secban-log-monitor in the secban group.
 if ! id -u secban-log-monitor >/dev/null 2>&1; then
-    useradd --no-create-home --system --shell /usr/sbin/nologin --gid secban secban-log-monitor
+    useradd --no-create-home --system --shell /sbin/nologin --gid secban secban-log-monitor
 fi
 
 # Add secban-log-monitor to log-reading groups if they exist.
@@ -47,11 +47,19 @@ if [ ! -f /etc/secban/monitor.yaml ]; then
 fi
 
 # Install systemd service.
-if [ ! -f /etc/systemd/system/secban-log-monitor.service ]; then
-    cp "./secban-log-monitor.service" "/etc/systemd/system/secban-log-monitor.service"
-fi
-
 if [ ! -z "$(which systemctl)" ]; then
+    if [ ! -f /etc/systemd/system/secban-log-monitor.service ]; then
+        cp "./secban-log-monitor.service" "/etc/systemd/system/secban-log-monitor.service"
+    fi
     systemctl daemon-reload
     systemctl enable secban-log-monitor.service
+fi
+
+# Install OpenRC service.
+if [ ! -z "$(which rc-update)" ]; then
+    if [ ! -f /etc/init.d/secban-log-monitor ]; then
+        cp "./secban-log-monitor.rc" "/etc/init.d/secban-log-monitor"
+        chmod +x "/etc/init.d/secban-log-monitor"
+    fi
+    rc-update add secban-log-monitor default
 fi

@@ -8,7 +8,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"gitlab.com/secban/secban-log-monitor/matcher"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 //go:embed data

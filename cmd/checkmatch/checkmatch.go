@@ -9,12 +9,15 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"gitlab.com/secban/secban-agent/version"
 	"gitlab.com/secban/secban-log-monitor/config"
 	"gitlab.com/secban/secban-log-monitor/matcher"
 	"gitlab.com/secban/secban-log-monitor/watcher"
 )
 
 func main() {
+	version.CLI()
+
 	err := run()
 	if err != nil {
 		//nolint: forbidigo

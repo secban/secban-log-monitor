@@ -1,0 +1,10 @@
+tail:
+  command: "tail"
+  args:
+    - "--follow=name"
+    - "--retry"
+    - "--quiet"
+    - "-n0"
+  test_args:
+    - "-n"
+    - "500"

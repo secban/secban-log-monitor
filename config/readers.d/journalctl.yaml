@@ -1,0 +1,18 @@
+journalctl:
+  command: "journalctl"
+  args:
+    - "-afb"
+    - "-p"
+    - "info"
+    - "-n0"
+    - "-o"
+    - "cat"
+  test_args:
+    - "-b"
+    - "-p"
+    - "info"
+    - "-n500"
+    - "-o"
+    - "cat"
+  env:
+    - "LANG=C"

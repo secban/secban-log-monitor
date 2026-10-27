@@ -40,6 +40,8 @@ chmod 0755 "/usr/bin/secban-log-checkmatch"
 mkdir -p /etc/secban
 if [ ! -f /etc/secban/monitor.yaml ]; then
     cp "./monitor.yaml" "/etc/secban/monitor.yaml"
+    mkdir -p /etc/secban/readers.d
+    cp -r ./readers.d/* "/etc/secban/readers.d/"
     mkdir -p /etc/secban/watchers.d
     cp -r ./watchers.d/* "/etc/secban/watchers.d/"
     mkdir -p /etc/secban/matchers.d

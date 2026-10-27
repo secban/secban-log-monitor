@@ -7,3 +7,4 @@ sshd:
     - '(?i:closed|disconnect|error|failed|reset).*\[preauth\]'
   rule: "standard"
   watcher: "sshd-journalctl"
+  # watcher: "sshd-syslog"

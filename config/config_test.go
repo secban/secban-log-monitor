@@ -14,10 +14,15 @@ func TestParseConfigValid(t *testing.T) {
 	configDir := writeConfigFile(t, `
 agent_url: "http://127.0.0.1:2048"
 log_level: "debug"
+readers:
+  tail:
+    command: "tail"
+    args: ["-f"]
+    test_args: ["-n", "100"]
 watchers:
   nginx:
-    command: "tail"
-    args: ["-f", "/var/log/nginx/access.log"]
+    reader: "tail"
+    args: ["/var/log/nginx/access.log"]
     ip_regex: '^(?P<ip>\S+) - -'
 matchers:
   nginx_bad:
@@ -42,11 +47,18 @@ func TestParseConfigDirs(t *testing.T) {
 log_level: "info"
 `, configDir)
 
-	writeDirEntry(t, configDir, "watchers.d", "journal.yaml", `
-journal:
+	writeDirEntry(t, configDir, "readers.d", "journal.yaml", `
+journalctl:
   command: "journalctl"
   args: ["-f"]
+  test_args: ["-n500"]
   env: ["LANG=C"]
+`)
+
+	writeDirEntry(t, configDir, "watchers.d", "journal.yaml", `
+journal:
+  reader: "journalctl"
+  args: ["SYSLOG_FACILITY=4"]
   ip_regex: 'from (?P<ip>\S+)'
 `)
 
@@ -59,6 +71,12 @@ ssh_evil:
 `)
 
 	conf := loadConfig(t, configDir)
+	assertDirConfigValues(t, conf)
+}
+
+func assertDirConfigValues(t *testing.T, conf *config.Config) {
+	t.Helper()
+
 	if conf.AgentURL != "http://127.0.0.1:1024" {
 		t.Errorf("expected default agent_url, got %s", conf.AgentURL)
 	}
@@ -68,9 +86,7 @@ ssh_evil:
 		t.Fatal("expected journal watcher")
 	}
 
-	if len(watcherConfig.Env) != 1 || watcherConfig.Env[0] != "LANG=C" {
-		t.Errorf("expected env [LANG=C], got %v", watcherConfig.Env)
-	}
+	assertDirWatcher(t, watcherConfig)
 
 	matcherConfig, matcherExists := conf.Matchers["ssh_evil"]
 	if !matcherExists {
@@ -82,13 +98,52 @@ ssh_evil:
 	}
 }
 
-func TestParseConfigInvalidRegex(t *testing.T) {
+func assertDirWatcher(t *testing.T, watcherConfig config.Watcher) {
+	t.Helper()
+
+	if len(watcherConfig.Env) != 1 || watcherConfig.Env[0] != "LANG=C" {
+		t.Errorf("expected env [LANG=C], got %v", watcherConfig.Env)
+	}
+
+	if watcherConfig.Command != "journalctl" {
+		t.Errorf("expected command journalctl, got %s", watcherConfig.Command)
+	}
+
+	if len(watcherConfig.Args) != 2 || watcherConfig.Args[0] != "-f" || watcherConfig.Args[1] != "SYSLOG_FACILITY=4" {
+		t.Errorf("unexpected args: %v", watcherConfig.Args)
+	}
+
+	if len(watcherConfig.TestArgs) != 2 || watcherConfig.TestArgs[0] != "-n500" || watcherConfig.TestArgs[1] != "SYSLOG_FACILITY=4" {
+		t.Errorf("unexpected test_args: %v", watcherConfig.TestArgs)
+	}
+}
+
+func TestParseConfigUnknownReader(t *testing.T) {
 	t.Parallel()
 
 	configDir := writeConfigFile(t, `
 watchers:
-  broken:
+  nginx:
+    reader: "unknown"
+    ip_regex: '(?P<ip>\S+)'
+`)
+
+	_, parseErr := config.ParseConfig(configDir)
+	if parseErr == nil {
+		t.Fatal("expected parse error for unknown reader, got nil")
+	}
+}
+
+func TestParseConfigInvalidRegex(t *testing.T) {
+	t.Parallel()
+
+	configDir := writeConfigFile(t, `
+readers:
+  r1:
     command: "tail"
+watchers:
+  broken:
+    reader: "r1"
     ip_regex: '(?P<ip>\S+)'
 matchers:
   m1:
@@ -108,9 +163,12 @@ func TestParseConfigUnknownWatcher(t *testing.T) {
 	t.Parallel()
 
 	configDir := writeConfigFile(t, `
+readers:
+  r1:
+    command: "tail"
 watchers:
   w1:
-    command: "tail"
+    reader: "r1"
     ip_regex: '(?P<ip>\S+)'
 matchers:
   m1:
@@ -130,9 +188,12 @@ func TestParseConfigMissingIPCaptureGroup(t *testing.T) {
 	t.Parallel()
 
 	configDir := writeConfigFile(t, `
+readers:
+  r1:
+    command: "tail"
 watchers:
   broken:
-    command: "tail"
+    reader: "r1"
     ip_regex: 'no-groups-here'
 `)
 
@@ -146,9 +207,12 @@ func TestParseConfigIgnoreRegexes(t *testing.T) {
 	t.Parallel()
 
 	configDir := writeConfigFile(t, `
+readers:
+  r1:
+    command: "tail"
 watchers:
   nginx:
-    command: "tail"
+    reader: "r1"
     ip_regex: '^(?P<ip>\S+) - -'
 matchers:
   nginx_m:
@@ -177,9 +241,12 @@ func TestParseConfigInvalidIgnoreRegex(t *testing.T) {
 	t.Parallel()
 
 	configDir := writeConfigFile(t, `
+readers:
+  r1:
+    command: "tail"
 watchers:
   broken:
-    command: "tail"
+    reader: "r1"
     ip_regex: '(?P<ip>\S+)'
 matchers:
   broken_m:

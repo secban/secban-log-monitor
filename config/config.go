@@ -11,19 +11,29 @@ import (
 	"regexp"
 	"strings"
 
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 const (
 	fileName        = "monitor.yaml"
 	defaultAgentURL = "http://127.0.0.1:1024"
 	defaultLogLevel = "info"
+	readersDir      = "readers.d"
 	watchersDir     = "watchers.d"
 	matchersDir     = "matchers.d"
 )
 
+type Reader struct {
+	Name     string   `yaml:"name"`
+	Command  string   `yaml:"command"`
+	Args     []string `yaml:"args"`
+	TestArgs []string `yaml:"test_args"`
+	Env      []string `yaml:"env"`
+}
+
 type Watcher struct {
 	Name     string   `yaml:"name"`
+	Reader   string   `yaml:"reader"`
 	Command  string   `yaml:"command"`
 	Args     []string `yaml:"args"`
 	TestArgs []string `yaml:"test_args"`
@@ -42,6 +52,7 @@ type Matcher struct {
 type ParsedConfig struct {
 	AgentURL string             `yaml:"agent_url"`
 	LogLevel string             `yaml:"log_level"`
+	Readers  map[string]Reader  `yaml:"readers"`
 	Watchers map[string]Watcher `yaml:"watchers"`
 	Matchers map[string]Matcher `yaml:"matchers"`
 }
@@ -49,6 +60,7 @@ type ParsedConfig struct {
 type Config struct {
 	AgentURL string
 	LogLevel string
+	Readers  map[string]Reader
 	Watchers map[string]Watcher
 	Matchers map[string]Matcher
 }
@@ -78,6 +90,11 @@ func ParseConfig(configDir string) (*Config, error) {
 		logLevel = defaultLogLevel
 	}
 
+	readersMap, loadReadersErr := loadReaders(configDir, parsed.Readers)
+	if loadReadersErr != nil {
+		return nil, loadReadersErr
+	}
+
 	watchersMap, loadWatchersErr := loadWatchers(configDir, parsed.Watchers)
 	if loadWatchersErr != nil {
 		return nil, loadWatchersErr
@@ -88,6 +105,11 @@ func ParseConfig(configDir string) (*Config, error) {
 		return nil, loadMatchersErr
 	}
 
+	resolveWatchersErr := resolveWatchers(watchersMap, readersMap)
+	if resolveWatchersErr != nil {
+		return nil, resolveWatchersErr
+	}
+
 	validateErr := validateConfig(watchersMap, matchersMap)
 	if validateErr != nil {
 		return nil, validateErr
@@ -96,6 +118,7 @@ func ParseConfig(configDir string) (*Config, error) {
 	config := Config{
 		AgentURL: agentURL,
 		LogLevel: logLevel,
+		Readers:  readersMap,
 		Watchers: watchersMap,
 		Matchers: matchersMap,
 	}
@@ -163,6 +186,27 @@ func readYAMLDir[T any](dirPath string) (map[string]T, error) {
 	return result, nil
 }
 
+func loadReaders(configDir string, base map[string]Reader) (map[string]Reader, error) {
+	merged := make(map[string]Reader)
+
+	for k, v := range base {
+		v.Name = k
+		merged[k] = v
+	}
+
+	dirReaders, readDirErr := readYAMLDir[Reader](filepath.Join(configDir, readersDir))
+	if readDirErr != nil {
+		return nil, readDirErr
+	}
+
+	for k, v := range dirReaders {
+		v.Name = k
+		merged[k] = v
+	}
+
+	return merged, nil
+}
+
 func loadWatchers(configDir string, base map[string]Watcher) (map[string]Watcher, error) {
 	merged := make(map[string]Watcher)
 
@@ -182,6 +226,56 @@ func loadWatchers(configDir string, base map[string]Watcher) (map[string]Watcher
 	}
 
 	return merged, nil
+}
+
+func resolveWatchers(watchers map[string]Watcher, readers map[string]Reader) error {
+	for watcherName, watcherConfig := range watchers {
+		if watcherConfig.Reader == "" {
+			return fmt.Errorf("watcher %q has no reader specified", watcherName)
+		}
+
+		readerConfig, readerExists := readers[watcherConfig.Reader]
+		if !readerExists {
+			return fmt.Errorf(
+				"watcher %q references unknown reader %q",
+				watcherName,
+				watcherConfig.Reader,
+			)
+		}
+
+		if readerConfig.Command == "" {
+			return fmt.Errorf("reader %q has no command specified", watcherConfig.Reader)
+		}
+
+		watcherConfig.Command = readerConfig.Command
+		watcherConfig.Env = append(slicesClone(readerConfig.Env), watcherConfig.Env...)
+
+		mergedArgs := make([]string, 0, len(readerConfig.Args)+len(watcherConfig.Args))
+		mergedArgs = append(mergedArgs, readerConfig.Args...)
+		mergedArgs = append(mergedArgs, watcherConfig.Args...)
+
+		mergedTestArgs := make([]string, 0, len(readerConfig.TestArgs)+len(watcherConfig.Args))
+		mergedTestArgs = append(mergedTestArgs, readerConfig.TestArgs...)
+		mergedTestArgs = append(mergedTestArgs, watcherConfig.Args...)
+
+		watcherConfig.Args = mergedArgs
+		watcherConfig.TestArgs = mergedTestArgs
+
+		watchers[watcherName] = watcherConfig
+	}
+
+	return nil
+}
+
+func slicesClone[T any](src []T) []T {
+	if src == nil {
+		return nil
+	}
+
+	clone := make([]T, len(src))
+	copy(clone, src)
+
+	return clone
 }
 
 func loadMatchers(configDir string, base map[string]Matcher) (map[string]Matcher, error) {

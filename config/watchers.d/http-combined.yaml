@@ -1,14 +1,6 @@
 # Watcher for nginx access log.
 nginx-combined:
+  reader: "tail"
   args:
-    - "--follow=name"
-    - "--retry"
-    - "--quiet"
-    - "-n0"
     - "/var/log/nginx/access.log"
-  command: "tail"
   ip_regex: '^(?P<ip>\S+) - -'
-  test_args:
-    - "-n"
-    - "500"
-    - "/var/log/nginx/access.log"

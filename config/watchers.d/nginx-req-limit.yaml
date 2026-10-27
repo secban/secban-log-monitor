@@ -1,14 +1,6 @@
 # Watcher for nginx request limit log.
 nginx-req-limit:
+  reader: "tail"
   args:
-    - "--follow=name"
-    - "--retry"
-    - "--quiet"
-    - "-n0"
     - "/var/log/nginx/error.log"
-  command: "tail"
   ip_regex: ', client: (?P<ip>\S+),'
-  test_args:
-    - "-n"
-    - "500"
-    - "/var/log/nginx/error.log"

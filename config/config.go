@@ -3,15 +3,12 @@ package config
 import (
 	"errors"
 	"fmt"
-	"maps"
 	"net/url"
-	"os"
 	"path"
-	"path/filepath"
 	"regexp"
 	"strings"
 
-	"go.yaml.in/yaml/v3"
+	"gitlab.com/secban/secban-agent/configloader"
 )
 
 const (
@@ -24,37 +21,37 @@ const (
 )
 
 type Reader struct {
-	Name     string   `yaml:"name"`
-	Command  string   `yaml:"command"`
-	Args     []string `yaml:"args"`
-	TestArgs []string `yaml:"test_args"`
-	Env      []string `yaml:"env"`
+	Name     string   `koanf:"name"`
+	Command  string   `koanf:"command"`
+	Args     []string `koanf:"args"`
+	TestArgs []string `koanf:"test_args"`
+	Env      []string `koanf:"env"`
 }
 
 type Watcher struct {
-	Name     string   `yaml:"name"`
-	Reader   string   `yaml:"reader"`
-	Command  string   `yaml:"command"`
-	Args     []string `yaml:"args"`
-	TestArgs []string `yaml:"test_args"`
-	Env      []string `yaml:"env"`
-	IPRegex  string   `yaml:"ip_regex"`
+	Name     string   `koanf:"name"`
+	Reader   string   `koanf:"reader"`
+	Command  string   `koanf:"command"`
+	Args     []string `koanf:"args"`
+	TestArgs []string `koanf:"test_args"`
+	Env      []string `koanf:"env"`
+	IPRegex  string   `koanf:"ip_regex"`
 }
 
 type Matcher struct {
-	Name          string   `yaml:"name"`
-	Watcher       string   `yaml:"watcher"`
-	Rule          string   `yaml:"rule"`
-	MatchRegexes  []string `yaml:"match_regexes"`
-	IgnoreRegexes []string `yaml:"ignore_regexes"`
+	Name          string   `koanf:"name"`
+	Watcher       string   `koanf:"watcher"`
+	Rule          string   `koanf:"rule"`
+	MatchRegexes  []string `koanf:"match_regexes"`
+	IgnoreRegexes []string `koanf:"ignore_regexes"`
 }
 
 type ParsedConfig struct {
-	AgentURL string             `yaml:"agent_url"`
-	LogLevel string             `yaml:"log_level"`
-	Readers  map[string]Reader  `yaml:"readers"`
-	Watchers map[string]Watcher `yaml:"watchers"`
-	Matchers map[string]Matcher `yaml:"matchers"`
+	AgentURL string             `koanf:"agent_url"`
+	LogLevel string             `koanf:"log_level"`
+	Readers  map[string]Reader  `koanf:"readers"`
+	Watchers map[string]Watcher `koanf:"watchers"`
+	Matchers map[string]Matcher `koanf:"matchers"`
 }
 
 type Config struct {
@@ -67,17 +64,15 @@ type Config struct {
 
 func ParseConfig(configDir string) (*Config, error) {
 	mainConfigPath := path.Join(configDir, fileName)
-
-	var parsed ParsedConfig
-
-	configData, readErr := os.ReadFile(mainConfigPath)
-	if readErr != nil {
-		return nil, readErr
+	scanDirs := []string{
+		path.Join(configDir, readersDir),
+		path.Join(configDir, watchersDir),
+		path.Join(configDir, matchersDir),
 	}
 
-	unmarshalErr := yaml.Unmarshal(configData, &parsed)
-	if unmarshalErr != nil {
-		return nil, unmarshalErr
+	parsed, parseErr := configloader.ParseConfig(defaultParsedConfig(), mainConfigPath, scanDirs)
+	if parseErr != nil {
+		return nil, parseErr
 	}
 
 	agentURL, resolveErr := resolveAgentURL(parsed.AgentURL)
@@ -85,42 +80,37 @@ func ParseConfig(configDir string) (*Config, error) {
 		return nil, resolveErr
 	}
 
-	logLevel := parsed.LogLevel
-	if logLevel == "" {
-		logLevel = defaultLogLevel
+	for k, v := range parsed.Readers {
+		v.Name = k
+		parsed.Readers[k] = v
 	}
 
-	readersMap, loadReadersErr := loadReaders(configDir, parsed.Readers)
-	if loadReadersErr != nil {
-		return nil, loadReadersErr
+	for k, v := range parsed.Watchers {
+		v.Name = k
+		parsed.Watchers[k] = v
 	}
 
-	watchersMap, loadWatchersErr := loadWatchers(configDir, parsed.Watchers)
-	if loadWatchersErr != nil {
-		return nil, loadWatchersErr
+	for k, v := range parsed.Matchers {
+		v.Name = k
+		parsed.Matchers[k] = v
 	}
 
-	matchersMap, loadMatchersErr := loadMatchers(configDir, parsed.Matchers)
-	if loadMatchersErr != nil {
-		return nil, loadMatchersErr
-	}
-
-	resolveWatchersErr := resolveWatchers(watchersMap, readersMap)
+	resolveWatchersErr := resolveWatchers(parsed.Watchers, parsed.Readers)
 	if resolveWatchersErr != nil {
 		return nil, resolveWatchersErr
 	}
 
-	validateErr := validateConfig(watchersMap, matchersMap)
+	validateErr := validateConfig(parsed.Watchers, parsed.Matchers)
 	if validateErr != nil {
 		return nil, validateErr
 	}
 
 	config := Config{
 		AgentURL: agentURL,
-		LogLevel: logLevel,
-		Readers:  readersMap,
-		Watchers: watchersMap,
-		Matchers: matchersMap,
+		LogLevel: parsed.LogLevel,
+		Readers:  parsed.Readers,
+		Watchers: parsed.Watchers,
+		Matchers: parsed.Matchers,
 	}
 
 	return &config, nil
@@ -142,90 +132,6 @@ func resolveAgentURL(agentURL string) (string, error) {
 	}
 
 	return agentURL, nil
-}
-
-func readYAMLDir[T any](dirPath string) (map[string]T, error) {
-	result := make(map[string]T)
-
-	entries, readDirErr := os.ReadDir(dirPath)
-	if readDirErr != nil {
-		if os.IsNotExist(readDirErr) {
-			return result, nil
-		}
-
-		return nil, readDirErr
-	}
-
-	for _, entry := range entries {
-		if entry.IsDir() {
-			continue
-		}
-
-		name := entry.Name()
-		if !strings.HasSuffix(name, ".yaml") && !strings.HasSuffix(name, ".yml") {
-			continue
-		}
-
-		filePath := filepath.Join(dirPath, name)
-
-		data, readFileErr := os.ReadFile(filePath)
-		if readFileErr != nil {
-			return nil, readFileErr
-		}
-
-		var items map[string]T
-
-		unmarshalErr := yaml.Unmarshal(data, &items)
-		if unmarshalErr != nil {
-			return nil, fmt.Errorf("failed to parse %s: %w", filePath, unmarshalErr)
-		}
-
-		maps.Copy(result, items)
-	}
-
-	return result, nil
-}
-
-func loadReaders(configDir string, base map[string]Reader) (map[string]Reader, error) {
-	merged := make(map[string]Reader)
-
-	for k, v := range base {
-		v.Name = k
-		merged[k] = v
-	}
-
-	dirReaders, readDirErr := readYAMLDir[Reader](filepath.Join(configDir, readersDir))
-	if readDirErr != nil {
-		return nil, readDirErr
-	}
-
-	for k, v := range dirReaders {
-		v.Name = k
-		merged[k] = v
-	}
-
-	return merged, nil
-}
-
-func loadWatchers(configDir string, base map[string]Watcher) (map[string]Watcher, error) {
-	merged := make(map[string]Watcher)
-
-	for k, v := range base {
-		v.Name = k
-		merged[k] = v
-	}
-
-	dirWatchers, readDirErr := readYAMLDir[Watcher](filepath.Join(configDir, watchersDir))
-	if readDirErr != nil {
-		return nil, readDirErr
-	}
-
-	for k, v := range dirWatchers {
-		v.Name = k
-		merged[k] = v
-	}
-
-	return merged, nil
 }
 
 func resolveWatchers(watchers map[string]Watcher, readers map[string]Reader) error {
@@ -276,27 +182,6 @@ func slicesClone[T any](src []T) []T {
 	copy(clone, src)
 
 	return clone
-}
-
-func loadMatchers(configDir string, base map[string]Matcher) (map[string]Matcher, error) {
-	merged := make(map[string]Matcher)
-
-	for k, v := range base {
-		v.Name = k
-		merged[k] = v
-	}
-
-	dirMatchers, readDirErr := readYAMLDir[Matcher](filepath.Join(configDir, matchersDir))
-	if readDirErr != nil {
-		return nil, readDirErr
-	}
-
-	for k, v := range dirMatchers {
-		v.Name = k
-		merged[k] = v
-	}
-
-	return merged, nil
 }
 
 func validateConfig(watchers map[string]Watcher, matchers map[string]Matcher) error {

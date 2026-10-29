@@ -20,7 +20,7 @@ type Monitor struct {
 	reporter reporter.Reporter
 }
 
-func New(cfg *config.Config) (*Monitor, error) {
+func New(cfg config.Config) (Monitor, error) {
 	rep := reporter.New(cfg.AgentURL, defaultTimeout)
 
 	watcherMatchers := make(map[string][]*matcher.Matcher)
@@ -33,7 +33,7 @@ func New(cfg *config.Config) (*Monitor, error) {
 			mCfg.IgnoreRegexes,
 		)
 		if newMatcherErr != nil {
-			return nil, fmt.Errorf("failed to create matcher %q: %w", mCfg.Name, newMatcherErr)
+			return Monitor{}, fmt.Errorf("failed to create matcher %q: %w", mCfg.Name, newMatcherErr)
 		}
 
 		watcherMatchers[mCfg.Watcher] = append(watcherMatchers[mCfg.Watcher], matcherInstance)
@@ -46,26 +46,26 @@ func New(cfg *config.Config) (*Monitor, error) {
 
 		w, newErr := watcher.New(wCfg, matchers)
 		if newErr != nil {
-			return nil, fmt.Errorf("failed to create watcher %q: %w", wCfg.Name, newErr)
+			return Monitor{}, fmt.Errorf("failed to create watcher %q: %w", wCfg.Name, newErr)
 		}
 
 		watchers = append(watchers, w)
 	}
 
-	return &Monitor{
+	return Monitor{
 		watchers: watchers,
 		reporter: rep,
 	}, nil
 }
 
-func NewWithCustom(watchers []watcher.WatchRunner, rep reporter.Reporter) *Monitor {
-	return &Monitor{
+func NewWithCustom(watchers []watcher.WatchRunner, rep reporter.Reporter) Monitor {
+	return Monitor{
 		watchers: watchers,
 		reporter: rep,
 	}
 }
 
-func (m *Monitor) Start(ctx context.Context) {
+func (m Monitor) Start(ctx context.Context) {
 	var waitGroup sync.WaitGroup
 
 	log.Info().Int("watchers_count", len(m.watchers)).Msg("starting monitor")

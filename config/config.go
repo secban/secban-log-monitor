@@ -1,23 +1,21 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 	"net/url"
 	"path"
 	"regexp"
 	"strings"
 
+	"github.com/rs/zerolog"
 	"gitlab.com/secban/secban-agent/configloader"
 )
 
 const (
-	fileName        = "monitor.yaml"
-	defaultAgentURL = "http://127.0.0.1:1024"
-	defaultLogLevel = "info"
-	readersDir      = "readers.d"
-	watchersDir     = "watchers.d"
-	matchersDir     = "matchers.d"
+	fileName    = "monitor.yaml"
+	readersDir  = "readers.d"
+	watchersDir = "watchers.d"
+	matchersDir = "matchers.d"
 )
 
 type Reader struct {
@@ -47,6 +45,7 @@ type Matcher struct {
 }
 
 type ParsedConfig struct {
+	Profiler string             `koanf:"profiler"`
 	AgentURL string             `koanf:"agent_url"`
 	LogLevel string             `koanf:"log_level"`
 	Readers  map[string]Reader  `koanf:"readers"`
@@ -56,13 +55,14 @@ type ParsedConfig struct {
 
 type Config struct {
 	AgentURL string
-	LogLevel string
+	Profiler string
+	LogLevel zerolog.Level
 	Readers  map[string]Reader
 	Watchers map[string]Watcher
 	Matchers map[string]Matcher
 }
 
-func ParseConfig(configDir string) (*Config, error) {
+func LoadConfig(configDir string) (Config, error) {
 	mainConfigPath := path.Join(configDir, fileName)
 	scanDirs := []string{
 		path.Join(configDir, readersDir),
@@ -72,12 +72,21 @@ func ParseConfig(configDir string) (*Config, error) {
 
 	parsed, parseErr := configloader.ParseConfig(defaultParsedConfig(), mainConfigPath, scanDirs)
 	if parseErr != nil {
-		return nil, parseErr
+		return Config{}, parseErr
 	}
 
+	transformed, transformErr := transformConfig(parsed)
+	if transformErr != nil {
+		return Config{}, transformErr
+	}
+
+	return transformed, nil
+}
+
+func transformConfig(parsed ParsedConfig) (Config, error) {
 	agentURL, resolveErr := resolveAgentURL(parsed.AgentURL)
 	if resolveErr != nil {
-		return nil, resolveErr
+		return Config{}, resolveErr
 	}
 
 	for k, v := range parsed.Readers {
@@ -97,30 +106,26 @@ func ParseConfig(configDir string) (*Config, error) {
 
 	resolveWatchersErr := resolveWatchers(parsed.Watchers, parsed.Readers)
 	if resolveWatchersErr != nil {
-		return nil, resolveWatchersErr
+		return Config{}, resolveWatchersErr
 	}
 
 	validateErr := validateConfig(parsed.Watchers, parsed.Matchers)
 	if validateErr != nil {
-		return nil, validateErr
+		return Config{}, validateErr
 	}
 
 	config := Config{
 		AgentURL: agentURL,
-		LogLevel: parsed.LogLevel,
+		Profiler: parsed.Profiler,
 		Readers:  parsed.Readers,
 		Watchers: parsed.Watchers,
 		Matchers: parsed.Matchers,
 	}
 
-	return &config, nil
+	return config, nil
 }
 
 func resolveAgentURL(agentURL string) (string, error) {
-	if agentURL == "" {
-		agentURL = defaultAgentURL
-	}
-
 	agentURL = strings.TrimRight(agentURL, "/")
 	if strings.HasPrefix(agentURL, "unix://") {
 		return agentURL, nil
@@ -185,10 +190,9 @@ func slicesClone[T any](src []T) []T {
 }
 
 func validateConfig(watchers map[string]Watcher, matchers map[string]Matcher) error {
-	if len(watchers) == 0 {
-		return errors.New("no watchers configured")
-	}
-
+	// if len(watchers) == 0 {
+	// 	return errors.New("no watchers configured")
+	// }
 	validateWatchersErr := validateWatchers(watchers)
 	if validateWatchersErr != nil {
 		return validateWatchersErr

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"gitlab.com/secban/secban-agent/version"
 	"gitlab.com/secban/secban-log-monitor/config"
@@ -39,12 +38,10 @@ func run() error {
 
 	targetWatcher := args[0]
 
-	conf, confErr := config.ParseConfig(configDir)
+	conf, confErr := config.LoadConfig(configDir)
 	if confErr != nil {
 		return fmt.Errorf("failed to parse config: %w", confErr)
 	}
-
-	setLogLevel(conf.LogLevel)
 
 	watcherCfg, watcherExists := conf.Watchers[targetWatcher]
 	if !watcherExists {
@@ -72,15 +69,6 @@ func run() error {
 		Msg("check completed")
 
 	return nil
-}
-
-func setLogLevel(logLevel string) {
-	level, parseLevelErr := zerolog.ParseLevel(logLevel)
-	if parseLevelErr != nil {
-		level = zerolog.InfoLevel
-	}
-
-	zerolog.SetGlobalLevel(level)
 }
 
 func buildWatcherMatchers(

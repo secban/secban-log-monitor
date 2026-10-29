@@ -9,6 +9,7 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"gitlab.com/secban/secban-agent/profiler"
 	"gitlab.com/secban/secban-agent/version"
 	"gitlab.com/secban/secban-log-monitor/config"
 	"gitlab.com/secban/secban-log-monitor/monitor"
@@ -17,22 +18,9 @@ import (
 func main() {
 	version.CLI()
 
-	var configDir string
+	conf := loadConf()
 
-	flag.StringVar(&configDir, "config", "/etc/secban", "path to config directory")
-	flag.Parse()
-
-	conf, confErr := config.ParseConfig(configDir)
-	if confErr != nil {
-		panic(confErr)
-	}
-
-	level, parseLevelErr := zerolog.ParseLevel(conf.LogLevel)
-	if parseLevelErr != nil {
-		level = zerolog.InfoLevel
-	}
-
-	zerolog.SetGlobalLevel(level)
+	zerolog.SetGlobalLevel(conf.LogLevel)
 
 	mon, monErr := monitor.New(conf)
 	if monErr != nil {
@@ -42,13 +30,31 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	if conf.Profiler != "" {
+		go profiler.Listen(ctx, conf.Profiler)
+	}
+
 	log.Info().
 		Str("agent_url", conf.AgentURL).
-		Str("log_level", level.String()).
 		Int("watchers", len(conf.Watchers)).
 		Msg("monitor service starting")
 
 	mon.Start(ctx)
 
 	log.Info().Msg("monitor service stopped")
+}
+
+func loadConf() config.Config {
+	var configDir string
+	//nolint:revive,nolintlint // Not a deep-exit, just split from main() for readability.
+	flag.StringVar(&configDir, "config", "/etc/secban", "path to config directory")
+	//nolint:revive,nolintlint
+	flag.Parse()
+
+	conf, confErr := config.LoadConfig(configDir)
+	if confErr != nil {
+		log.Fatal().Err(confErr).Msg("failed to load config")
+	}
+
+	return conf
 }

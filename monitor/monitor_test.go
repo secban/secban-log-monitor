@@ -57,9 +57,9 @@ func (w *mockWatcher) Watch(ctx context.Context, handler watcher.Handler) error 
 func TestMonitorNew(t *testing.T) {
 	t.Parallel()
 
-	cfg := &config.Config{
+	cfg := config.Config{
 		AgentURL: "http://127.0.0.1:1024",
-		LogLevel: "info",
+		LogLevel: 1,
 		Watchers: map[string]config.Watcher{
 			"w1": {
 				Name:    "w1",
@@ -77,13 +77,9 @@ func TestMonitorNew(t *testing.T) {
 		},
 	}
 
-	m, err := monitor.New(cfg)
+	_, err := monitor.New(cfg)
 	if err != nil {
 		t.Fatalf("unexpected error creating monitor: %v", err)
-	}
-
-	if m == nil {
-		t.Fatal("expected monitor instance, got nil")
 	}
 }
 

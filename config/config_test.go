@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/rs/zerolog"
 	"gitlab.com/secban/secban-log-monitor/config"
 )
 
@@ -34,9 +35,13 @@ matchers:
 `)
 
 	conf := loadConfig(t, configDir)
-	assertAgentAndLogValues(t, conf, "http://127.0.0.1:2048", "debug")
+	assertAgentAndLogValues(t, conf, "http://127.0.0.1:2048", zerolog.DebugLevel)
 	assertWatcherConfig(t, conf)
 	assertMatcherConfig(t, conf)
+
+	if conf.Profiler != "localhost:6061" {
+		t.Errorf("expected default profiler localhost:6061, got %s", conf.Profiler)
+	}
 }
 
 func TestParseConfigDirs(t *testing.T) {
@@ -74,10 +79,10 @@ ssh_evil:
 	assertDirConfigValues(t, conf)
 }
 
-func assertDirConfigValues(t *testing.T, conf *config.Config) {
+func assertDirConfigValues(t *testing.T, conf config.Config) {
 	t.Helper()
 
-	if conf.AgentURL != "http://127.0.0.1:1024" {
+	if conf.AgentURL != "unix:///var/run/secban/agent.sock" {
 		t.Errorf("expected default agent_url, got %s", conf.AgentURL)
 	}
 
@@ -128,7 +133,7 @@ watchers:
     ip_regex: '(?P<ip>\S+)'
 `)
 
-	_, parseErr := config.ParseConfig(configDir)
+	_, parseErr := config.LoadConfig(configDir)
 	if parseErr == nil {
 		t.Fatal("expected parse error for unknown reader, got nil")
 	}
@@ -153,7 +158,7 @@ matchers:
       - '[invalid'
 `)
 
-	_, parseErr := config.ParseConfig(configDir)
+	_, parseErr := config.LoadConfig(configDir)
 	if parseErr == nil {
 		t.Fatal("expected parse error for invalid regex, got nil")
 	}
@@ -178,7 +183,7 @@ matchers:
       - 'error'
 `)
 
-	_, parseErr := config.ParseConfig(configDir)
+	_, parseErr := config.LoadConfig(configDir)
 	if parseErr == nil {
 		t.Fatal("expected parse error for unknown watcher, got nil")
 	}
@@ -197,7 +202,7 @@ watchers:
     ip_regex: 'no-groups-here'
 `)
 
-	_, parseErr := config.ParseConfig(configDir)
+	_, parseErr := config.LoadConfig(configDir)
 	if parseErr == nil {
 		t.Fatal("expected parse error for ip_regex without capture groups, got nil")
 	}
@@ -258,7 +263,7 @@ matchers:
       - '[invalid'
 `)
 
-	_, parseErr := config.ParseConfig(configDir)
+	_, parseErr := config.LoadConfig(configDir)
 	if parseErr == nil {
 		t.Fatal("expected parse error for invalid ignore_regex, got nil")
 	}
@@ -302,10 +307,10 @@ func writeDirEntry(
 	}
 }
 
-func loadConfig(t *testing.T, configDir string) *config.Config {
+func loadConfig(t *testing.T, configDir string) config.Config {
 	t.Helper()
 
-	conf, parseErr := config.ParseConfig(configDir)
+	conf, parseErr := config.LoadConfig(configDir)
 	if parseErr != nil {
 		t.Fatalf("unexpected error parsing config: %v", parseErr)
 	}
@@ -315,9 +320,9 @@ func loadConfig(t *testing.T, configDir string) *config.Config {
 
 func assertAgentAndLogValues(
 	t *testing.T,
-	conf *config.Config,
+	conf config.Config,
 	expectedAgentURL string,
-	expectedLogLevel string,
+	expectedLogLevel zerolog.Level,
 ) {
 	t.Helper()
 
@@ -330,7 +335,7 @@ func assertAgentAndLogValues(
 	}
 }
 
-func assertWatcherConfig(t *testing.T, conf *config.Config) {
+func assertWatcherConfig(t *testing.T, conf config.Config) {
 	t.Helper()
 
 	if len(conf.Watchers) != 1 {
@@ -351,7 +356,7 @@ func assertWatcherConfig(t *testing.T, conf *config.Config) {
 	}
 }
 
-func assertMatcherConfig(t *testing.T, conf *config.Config) {
+func assertMatcherConfig(t *testing.T, conf config.Config) {
 	t.Helper()
 
 	if len(conf.Matchers) != 1 {

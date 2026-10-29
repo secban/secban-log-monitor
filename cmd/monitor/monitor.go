@@ -34,11 +34,6 @@ func main() {
 		go profiler.Listen(ctx, conf.Profiler)
 	}
 
-	log.Info().
-		Str("agent_url", conf.AgentURL).
-		Int("watchers", len(conf.Watchers)).
-		Msg("monitor service starting")
-
 	mon.Start(ctx)
 
 	log.Info().Msg("monitor service stopped")

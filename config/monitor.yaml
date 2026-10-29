@@ -1,8 +1,0 @@
-# Secban monitor configuration file. #
-#####################################
-
-# Agent HTTP server address to report offenders.
-agent_url: "unix:///var/run/secban/agent.sock"
-
-# Logging level: trace, debug, info, warn, error.
-log_level: "info"

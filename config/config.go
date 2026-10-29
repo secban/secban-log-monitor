@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"path"
@@ -12,7 +13,7 @@ import (
 )
 
 const (
-	fileName    = "monitor.yaml"
+	fileName    = "log-monitor.yaml"
 	readersDir  = "readers.d"
 	watchersDir = "watchers.d"
 	matchersDir = "matchers.d"
@@ -70,7 +71,7 @@ func LoadConfig(configDir string) (Config, error) {
 		path.Join(configDir, matchersDir),
 	}
 
-	parsed, parseErr := configloader.ParseConfig(defaultParsedConfig(), mainConfigPath, scanDirs)
+	parsed, parseErr := configloader.ParseConfig(DefaultParsedConfig(), mainConfigPath, scanDirs)
 	if parseErr != nil {
 		return Config{}, parseErr
 	}
@@ -190,9 +191,9 @@ func slicesClone[T any](src []T) []T {
 }
 
 func validateConfig(watchers map[string]Watcher, matchers map[string]Matcher) error {
-	// if len(watchers) == 0 {
-	// 	return errors.New("no watchers configured")
-	// }
+	if len(watchers) == 0 {
+		return errors.New("no watchers configured")
+	}
 	validateWatchersErr := validateWatchers(watchers)
 	if validateWatchersErr != nil {
 		return validateWatchersErr

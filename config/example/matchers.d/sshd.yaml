@@ -1,10 +1,10 @@
 # Matcher for sshd authentication failures and suspicious disconnects.
 sshd:
-  ignore_regexes:
-    - "closed by ::1 port"
+  # Default ignore regexes for sshd logs.
   match_regexes:
     - "(?i) failure|invalid user|not allowed|login refused|authentication error|attempts exceeded|no supported authentication|auth fail|bad protocol|did not receive|unable to negotiate|illegal user|unknown user|invalid format"
     - '(?i:closed|disconnect|error|failed|reset).*\[preauth\]'
-  rule: "standard"
-  watcher: "sshd-journalctl"
-  # watcher: "sshd-syslog"
+  ignore_regexes:
+    - "closed by ::1 port" # No IP information for local connections.
+  rule: "default" # Default rule for handling sshd authentication failures and suspicious disconnects
+  watcher: "sshd-journalctl" # Watcher for sshd logs via journalctl, see /etc/secban/watchers.d/sshd-journalctl.yaml

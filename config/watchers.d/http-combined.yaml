@@ -1,6 +1,0 @@
-# Watcher for nginx access log.
-nginx-combined:
-  reader: "tail"
-  args:
-    - "/var/log/nginx/access.log"
-  ip_regex: '^(?P<ip>\S+) - -'

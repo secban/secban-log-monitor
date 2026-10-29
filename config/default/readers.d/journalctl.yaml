@@ -1,0 +1,19 @@
+journalctl:
+  args:
+    - -afb
+    - -p
+    - info
+    - -n0
+    - -o
+    - cat
+  command: journalctl
+  env:
+    - LANG=C
+  name: journalctl
+  test_args:
+    - -b
+    - -p
+    - info
+    - -n500
+    - -o
+    - cat

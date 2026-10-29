@@ -1,0 +1,6 @@
+# Matcher for HTTP access log not found responses.
+http-not-found:
+  match_regexes:
+    - '" (?:404) ' # Not Found
+  rule: "short_ban" # Ban name. See the secban agent configuration at /etc/secban/rules.d/.
+  watcher: "http-combined" # Watcher for HTTP combined access logs, see /etc/secban/watchers.d/http-combined.yaml

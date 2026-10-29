@@ -1,0 +1,13 @@
+# Secban monitor configuration file. #
+#####################################
+
+# Agent server address to report offenders.
+agent_url: "unix:///var/run/secban/agent.sock"
+# agent_url: "http://127.0.0.1:1024"
+
+# Logging level: trace, debug, info, warn, error.
+log_level: "info"
+
+# Profiler endpoint. Set to an empty value to disable. PPROF information will be at /debug/pprof/.
+profiler: ""
+# profiler: localhost:6061

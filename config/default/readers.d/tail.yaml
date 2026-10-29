@@ -1,0 +1,13 @@
+tail:
+  args:
+    - --follow=name
+    - --retry
+    - --quiet
+    - -n0
+  command: tail
+  env:
+    - LANG=C
+  name: tail
+  test_args:
+    - -n
+    - "500"

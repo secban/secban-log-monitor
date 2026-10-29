@@ -32,12 +32,18 @@ export GOARCH="$ARCH"; env CGO_ENABLED=0 GOOS="$GOOS" GOARCH="$ARCH" go build $B
 export GOARCH="$ARCH"; env CGO_ENABLED=0 GOOS="$GOOS" GOARCH="$ARCH" go build $BUILD_OPTIONS -o "$TMPDIR/$ARCH/secban-log-checkmatch" "$LDFLAGS" "$REPO/cmd/checkmatch/checkmatch.go"
 
 cp "$REPO/_scripts/install.sh" "$TMPDIR/$ARCH/"
-cp "$REPO/config/monitor.yaml" "$TMPDIR/$ARCH/"
-cp -r "$REPO/config/readers.d" "$TMPDIR/$ARCH/"
-cp -r "$REPO/config/watchers.d" "$TMPDIR/$ARCH/"
-cp -r "$REPO/config/matchers.d" "$TMPDIR/$ARCH/"
-cp "$REPO/_scripts/systemd/secban-log-monitor.service" "$TMPDIR/$ARCH/"
-cp "$REPO/_scripts/openrc/secban-log-monitor.rc" "$TMPDIR/$ARCH/"
+chmod +x "$TMPDIR/$ARCH/install.sh"
+
+cp "$REPO/_scripts/systemd/secban-agent.service" "$TMPDIR/$ARCH/"
+chmod +x "$TMPDIR/$ARCH/secban-agent.service"
+
+mkdir -p "$TMPDIR/$ARCH/etc/secban"
+cp -ar "$REPO/config/default/" "$TMPDIR/$ARCH/etc/secban"
+find "$TMPDIR/$ARCH/etc/secban" -type f -name "*.yaml" -exec sh -c 'for f; do mv "$f" "$f.default"; done' sh {} +
+cp -ar "$REPO/config/example/" "$TMPDIR/$ARCH/etc/secban"
+find "$TMPDIR/$ARCH/etc/secban" -type f -name "*.yaml" -exec sh -c 'for f; do mv "$f" "$f.example"; done' sh {} +
+find "$TMPDIR/$ARCH/etc/secban" -type d -exec chmod 755 {} \;
+find "$TMPDIR/$ARCH/etc/secban" -type f -exec chmod 644 {} \;
 
 
 chmod +x "$TMPDIR/$ARCH/install.sh"

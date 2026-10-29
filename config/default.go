@@ -1,9 +1,9 @@
 package config
 
-func defaultParsedConfig() ParsedConfig {
+func DefaultParsedConfig() ParsedConfig {
 	return ParsedConfig{
 		AgentURL: "unix:///var/run/secban/agent.sock",
-		Profiler: "localhost:6061",
+		Profiler: "",
 		LogLevel: "info",
 		Readers: map[string]Reader{
 			"journalctl": journalctlReader(),

@@ -1,0 +1,6 @@
+# Matcher for HTTP combined access log kiddie scans.
+http-kiddies:
+  match_regexes:
+    - '(?i:\.php|admin|\.\.|cgi-bin|auth|webmail|\\x01\\|\\x00\\|\.cgi|\.asp|\.aspx|\.jsp|\.pl|\.py|\.rb|\.sh|\.exe|\.env|\.ini|\.sql|\.log|\.key|wp-login|xmlrpc|\.bak|\.old|\.backup|\.swp|\.tmp|\.bash|dump|\.git|\.svn|\.htaccess)'
+  rule: "default" # Ban name. See the secban agent configuration at /etc/secban/rules.d/.
+  watcher: "http-combined" # Watcher for HTTP combined access logs, see /etc/secban/watchers.d/http-combined.yaml

@@ -1,0 +1,6 @@
+# Matcher for nginx request limit log.
+nginx-req-limit:
+  match_regexes:
+    - "limiting requests, excess"
+  rule: "default" # Ban name. See the secban agent configuration at /etc/secban/rules.d/.
+  watcher: "nginx-req-limit" # Watcher for nginx request limit logs, see /etc/secban/watchers.d/nginx-req-limit.yaml

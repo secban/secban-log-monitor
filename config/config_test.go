@@ -15,6 +15,7 @@ func TestParseConfigValid(t *testing.T) {
 	configDir := writeConfigFile(t, `
 agent_url: "http://127.0.0.1:2048"
 log_level: "debug"
+profiler: "localhost:6061"
 readers:
   tail:
     command: "tail"
@@ -277,7 +278,7 @@ func writeConfigFile(t *testing.T, monitorYAML string, configDir ...string) stri
 		dir = configDir[0]
 	}
 
-	writeErr := os.WriteFile(filepath.Join(dir, "monitor.yaml"), []byte(monitorYAML), 0o600)
+	writeErr := os.WriteFile(filepath.Join(dir, "log-monitor.yaml"), []byte(monitorYAML), 0o600)
 	if writeErr != nil {
 		t.Fatalf("failed to write monitor.yaml: %v", writeErr)
 	}

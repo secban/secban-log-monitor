@@ -1,6 +1,0 @@
-# Matcher for nginx access log bad requests.
-nginx-bad-request:
-  match_regexes:
-    - '" (?:400|401|403|444) ' # Bad request, Unauthorized, Forbidden, No Response
-  rule: "standard"
-  watcher: "nginx-combined"

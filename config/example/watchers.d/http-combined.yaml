@@ -1,0 +1,7 @@
+# HTTP combined access log watcher. Suitable for standard combined log format (default for Apache, NGINX and others).
+http-combined:
+  reader: "tail"
+  ip_regex: '^(?P<ip>\S+) - -'
+  args:
+    - "/var/log/nginx/website1-access.log"
+    - "/var/log/apache2/another-access.log"

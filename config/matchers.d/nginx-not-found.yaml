@@ -1,6 +1,0 @@
-# Matcher for nginx access log not found responses.
-nginx-not-found:
-  match_regexes:
-    - '" (?:404) ' # Not Found
-  rule: "not_found"
-  watcher: "nginx-combined"

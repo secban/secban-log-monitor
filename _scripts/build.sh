@@ -34,8 +34,8 @@ export GOARCH="$ARCH"; env CGO_ENABLED=0 GOOS="$GOOS" GOARCH="$ARCH" go build $B
 cp "$REPO/_scripts/install.sh" "$TMPDIR/$ARCH/"
 chmod +x "$TMPDIR/$ARCH/install.sh"
 
-cp "$REPO/_scripts/systemd/secban-agent.service" "$TMPDIR/$ARCH/"
-chmod +x "$TMPDIR/$ARCH/secban-agent.service"
+cp "$REPO/_scripts/systemd/secban-log-monitor.service" "$TMPDIR/$ARCH/"
+chmod +x "$TMPDIR/$ARCH/secban-log-monitor.service"
 
 mkdir -p "$TMPDIR/$ARCH/etc/secban"
 cp -ar "$REPO/config/default/" "$TMPDIR/$ARCH/etc/secban"

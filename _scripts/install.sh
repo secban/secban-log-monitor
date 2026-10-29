@@ -36,17 +36,8 @@ chmod 0755 "/usr/sbin/secban-log-monitor"
 cp "./secban-log-checkmatch" "/usr/bin/"
 chmod 0755 "/usr/bin/secban-log-checkmatch"
 
-# Install configuration.
-mkdir -p /etc/secban
-if [ ! -f /etc/secban/monitor.yaml ]; then
-    cp "./monitor.yaml" "/etc/secban/monitor.yaml"
-    mkdir -p /etc/secban/readers.d
-    cp -r ./readers.d/* "/etc/secban/readers.d/"
-    mkdir -p /etc/secban/watchers.d
-    cp -r ./watchers.d/* "/etc/secban/watchers.d/"
-    mkdir -p /etc/secban/matchers.d
-    cp -r ./matchers.d/* "/etc/secban/matchers.d/"
-fi
+# Install the example agent configuration.
+cp -ar "./etc/secban/" "/etc/secban/"
 
 # Install systemd service.
 if [ ! -z "$(which systemctl)" ]; then

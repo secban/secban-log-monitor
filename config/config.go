@@ -194,6 +194,7 @@ func validateConfig(watchers map[string]Watcher, matchers map[string]Matcher) er
 	if len(watchers) == 0 {
 		return errors.New("no watchers configured")
 	}
+
 	validateWatchersErr := validateWatchers(watchers)
 	if validateWatchersErr != nil {
 		return validateWatchersErr

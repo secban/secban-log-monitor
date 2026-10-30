@@ -38,9 +38,9 @@ cp "$REPO/_scripts/systemd/secban-log-monitor.service" "$TMPDIR/$ARCH/"
 chmod +x "$TMPDIR/$ARCH/secban-log-monitor.service"
 
 mkdir -p "$TMPDIR/$ARCH/etc/secban"
-cp -ar "$REPO/config/default/" "$TMPDIR/$ARCH/etc/secban"
+cp -ar $REPO/config/default/* "$TMPDIR/$ARCH/etc/secban"
 find "$TMPDIR/$ARCH/etc/secban" -type f -name "*.yaml" -exec sh -c 'for f; do mv "$f" "$f.default"; done' sh {} +
-cp -ar "$REPO/config/example/" "$TMPDIR/$ARCH/etc/secban"
+cp -ar $REPO/config/example/* "$TMPDIR/$ARCH/etc/secban"
 find "$TMPDIR/$ARCH/etc/secban" -type f -name "*.yaml" -exec sh -c 'for f; do mv "$f" "$f.example"; done' sh {} +
 find "$TMPDIR/$ARCH/etc/secban" -type d -exec chmod 755 {} \;
 find "$TMPDIR/$ARCH/etc/secban" -type f -exec chmod 644 {} \;

@@ -4,7 +4,7 @@ go 1.27.0
 
 require (
 	github.com/rs/zerolog v1.35.1
-	gitlab.com/secban/secban-agent v0.0.12
+	gitlab.com/secban/secban-agent v0.0.13
 	go.yaml.in/yaml/v3 v3.0.5
 )
 
